@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:drive_user_flutter/assistants/assistants_method.dart';
 import 'package:drive_user_flutter/authentication/login_screen.dart';
 import 'package:drive_user_flutter/global/global.dart';
+import 'package:drive_user_flutter/widgets/my_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -194,12 +195,16 @@ class _MainScreenState extends State<MainScreen> {
     // TODO: implement initState
     super.initState();
 
-    AssistantMethod.readCurrentOnlineUserInfo();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(),
+      drawer: MyDrawer(
+        name: userModelCurrentInfo!.name,
+        email: userModelCurrentInfo!.email,
+      ),
       body: Stack(
         children: [
           GoogleMap(
