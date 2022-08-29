@@ -1,0 +1,69 @@
+{
+  "project_info": {
+    "project_number": "954250263843",
+    "firebase_url": "https://uber-ola-and-indriver-cl-9c428-default-rtdb.firebaseio.com",
+    "project_id": "uber-ola-and-indriver-cl-9c428",
+    "storage_bucket": "uber-ola-and-indriver-cl-9c428.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:954250263843:android:f92b8e444291b00c8b6096",
+        "android_client_info": {
+          "package_name": "com.sudesh.driversapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "954250263843-iip7cmoogo0lshht3p27j3g0ntvt5e40.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCmPXIk9GmGur5bjpK2_f3pPp-oaU0IMI4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "954250263843-iip7cmoogo0lshht3p27j3g0ntvt5e40.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:954250263843:android:2630ee7c9104d0fa8b6096",
+        "android_client_info": {
+          "package_name": "com.sudesh.driveuserflutter"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "954250263843-iip7cmoogo0lshht3p27j3g0ntvt5e40.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCmPXIk9GmGur5bjpK2_f3pPp-oaU0IMI4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "954250263843-iip7cmoogo0lshht3p27j3g0ntvt5e40.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
