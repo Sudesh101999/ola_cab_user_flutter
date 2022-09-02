@@ -8,6 +8,7 @@ import 'package:drive_user_flutter/mainScreen/search_places_sreen.dart';
 import 'package:drive_user_flutter/widgets/my_drawer.dart';
 import 'package:drive_user_flutter/widgets/progress_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -43,6 +44,8 @@ class _MainScreenState extends State<MainScreen> {
 
   String userName = "Your Name";
   String userEmail = "Your Email";
+
+  bool openNavigationDrawer = true;
 
   blackThemeGoogleMap() {
     newGoogleMapController!.setMapStyle('''
@@ -300,12 +303,17 @@ class _MainScreenState extends State<MainScreen> {
             left: 14,
             child: GestureDetector(
               onTap: () {
-                sKey.currentState!.openDrawer();
+                if(openNavigationDrawer) {
+                  sKey.currentState!.openDrawer();
+                }else{
+                  //restart app automatically
+                  SystemNavigator.pop();
+                }
               },
               child: CircleAvatar(
                 backgroundColor: Colors.grey,
                 child: Icon(
-                  Icons.menu,
+                  openNavigationDrawer ? Icons.menu : Icons.close,
                   color: Colors.black54,
                 ),
               ),
@@ -395,8 +403,14 @@ class _MainScreenState extends State<MainScreen> {
                               MaterialPageRoute(
                                   builder: (c) => SearchPlacesScreen()));
                           if (responseFromSearchScreen == "obtainedDropOff") {
+
+                            //for change menu option to close button
+                            setState((){
+                              openNavigationDrawer = false;
+                            });
                             //drow routs - drow polyline
                             await drawPolyLineFromOriginToDestination();
+
                           }
                         },
                         child: Row(
