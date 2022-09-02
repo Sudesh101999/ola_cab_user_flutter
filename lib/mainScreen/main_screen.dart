@@ -3,9 +3,15 @@ import 'dart:async';
 import 'package:drive_user_flutter/assistants/assistants_method.dart';
 import 'package:drive_user_flutter/authentication/login_screen.dart';
 import 'package:drive_user_flutter/global/global.dart';
+import 'package:drive_user_flutter/infoHandler/app_info.dart';
+import 'package:drive_user_flutter/mainScreen/search_places_sreen.dart';
 import 'package:drive_user_flutter/widgets/my_drawer.dart';
+import 'package:drive_user_flutter/widgets/progress_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:provider/provider.dart';
 
 class MainScreen extends StatefulWidget {
   @override
@@ -13,7 +19,6 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-
   final Completer<GoogleMapController> _controllerGoogleMap = Completer();
 
   GoogleMapController? newGoogleMapController;
@@ -23,8 +28,23 @@ class _MainScreenState extends State<MainScreen> {
     zoom: 14.4746,
   );
 
+  GlobalKey<ScaffoldState> sKey = GlobalKey<ScaffoldState>();
+  double searchLocationContainerHeight = 220;
+  Position? userCurrentLocation;
+  var geoLocator = Geolocator();
 
-  blackThemeGoogleMap(){
+  LocationPermission? _locationPermission;
+  double bottomPaddingOfMap = 0;
+
+  List<LatLng> pLineCoOrdinatesList = [];
+  Set<Polyline> polylineSet = {};
+  Set<Marker> markersSet = {};
+  Set<Circle> circleSet = {};
+
+  String userName = "Your Name";
+  String userEmail = "Your Email";
+
+  blackThemeGoogleMap() {
     newGoogleMapController!.setMapStyle('''
                     [
                       {
@@ -190,37 +210,390 @@ class _MainScreenState extends State<MainScreen> {
                 ''');
   }
 
+  checkIfLocationPermissionAllowed() async {
+    _locationPermission = await Geolocator.requestPermission();
+
+    if (_locationPermission == LocationPermission.denied) {
+      _locationPermission = await Geolocator.requestPermission();
+    }
+  }
+
+  locateUserPosition() async {
+    print("locateUserPosition");
+    Position cPosition = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+    userCurrentLocation = cPosition;
+
+    LatLng latLngPosition =
+        LatLng(userCurrentLocation!.latitude, userCurrentLocation!.longitude);
+
+    CameraPosition cameraPosition =
+        CameraPosition(target: latLngPosition, zoom: 14);
+
+    newGoogleMapController!
+        .animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
+
+    String humenReadableAddress =
+        await AssistantMethod.searchAddressForGeographicCoOrdenates(
+            userCurrentLocation!, context);
+    print("this is your address: $humenReadableAddress");
+
+    userName = userModelCurrentInfo!.name!;
+    userEmail = userModelCurrentInfo!.email!;
+  }
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
 
+    checkIfLocationPermissionAllowed();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
-      drawer: MyDrawer(
-        name: userModelCurrentInfo!.name,
-        email: userModelCurrentInfo!.email,
+      key: sKey,
+      drawer: Container(
+        width: 265,
+        child: Theme(
+          data: Theme.of(context).copyWith(
+            canvasColor: Colors.black,
+          ),
+          child: MyDrawer(
+            name: userName,
+            email: userEmail,
+          ),
+        ),
       ),
       body: Stack(
         children: [
           GoogleMap(
+            padding: EdgeInsets.only(bottom: bottomPaddingOfMap),
             mapType: MapType.normal,
-            myLocationButtonEnabled: true,
+            myLocationEnabled: true,
+            zoomGesturesEnabled: true,
+            zoomControlsEnabled: true,
             initialCameraPosition: _kGooglePlex,
-            onMapCreated: (GoogleMapController controller){
+            polylines: polylineSet,
+            markers: markersSet,
+            circles: circleSet,
+            onMapCreated: (GoogleMapController controller) {
               _controllerGoogleMap.complete(controller);
               newGoogleMapController = controller;
 
               //this is for google theme
               blackThemeGoogleMap();
+
+              setState(() {
+                bottomPaddingOfMap = 230;
+              });
+
+              //letest position of user
+              locateUserPosition();
             },
-          )
+          ),
+
+          //custom hamburget button for drawer
+          Positioned(
+            top: 35,
+            left: 14,
+            child: GestureDetector(
+              onTap: () {
+                sKey.currentState!.openDrawer();
+              },
+              child: CircleAvatar(
+                backgroundColor: Colors.grey,
+                child: Icon(
+                  Icons.menu,
+                  color: Colors.black54,
+                ),
+              ),
+            ),
+          ),
+
+          //UI for searching location
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: AnimatedSize(
+              curve: Curves.easeIn,
+              duration: const Duration(milliseconds: 120),
+              child: Container(
+                height: searchLocationContainerHeight,
+                decoration: const BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.only(
+                      topRight: Radius.circular(20),
+                      topLeft: Radius.circular(20),
+                    )),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+                  child: Column(
+                    children: [
+                      // From Location
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.add_location_alt_outlined,
+                            color: Colors.grey,
+                          ),
+                          const SizedBox(
+                            width: 12,
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "From",
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              Text(
+                                Provider.of<AppInfo>(context)
+                                            .userPickUpLocation !=
+                                        null
+                                    ? (Provider.of<AppInfo>(context)
+                                                .userPickUpLocation!
+                                                .locationName!)
+                                            .substring(0, 45) +
+                                        "..."
+                                    : "Not getting address",
+                                style: const TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          )
+                        ],
+                      ),
+
+                      const SizedBox(
+                        height: 10,
+                      ),
+
+                      Divider(
+                        height: 1,
+                        thickness: 1,
+                        color: Colors.grey,
+                      ),
+
+                      const SizedBox(
+                        height: 16,
+                      ),
+                      // To Location
+                      GestureDetector(
+                        onTap: () async {
+                          //search places screen
+                          var responseFromSearchScreen = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (c) => SearchPlacesScreen()));
+                          if (responseFromSearchScreen == "obtainedDropOff") {
+                            //drow routs - drow polyline
+                            await drawPolyLineFromOriginToDestination();
+                          }
+                        },
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.add_location_alt_outlined,
+                              color: Colors.grey,
+                            ),
+                            const SizedBox(
+                              width: 12,
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  "To",
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                Text(
+                                  Provider.of<AppInfo>(context)
+                                              .userDropOffLocation !=
+                                          null
+                                      ? Provider.of<AppInfo>(context)
+                                          .userDropOffLocation!
+                                          .locationName!
+                                      : "Where to go?",
+                                  style: const TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            )
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(
+                        height: 10,
+                      ),
+
+                      Divider(
+                        height: 1,
+                        thickness: 1,
+                        color: Colors.grey,
+                      ),
+
+                      const SizedBox(
+                        height: 16,
+                      ),
+
+                      //button for start ride
+                      ElevatedButton(
+                        onPressed: () {},
+                        style: ElevatedButton.styleFrom(
+                            primary: Colors.green,
+                            textStyle: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            )),
+                        child: const Text("Request a Ride"),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  Future<void> drawPolyLineFromOriginToDestination() async {
+    var originPostion =
+        Provider.of<AppInfo>(context, listen: false).userPickUpLocation;
+    var destinationPostion =
+        Provider.of<AppInfo>(context, listen: false).userDropOffLocation;
+
+    var originLatLng = LatLng(
+        originPostion!.locationLatitude!, originPostion.locationLongitude!);
+    var destinationLatLng = LatLng(destinationPostion!.locationLatitude!,
+        destinationPostion.locationLongitude!);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => ProgressDialog(
+        message: "Please Wait",
+      ),
+    );
+
+    var directionDetailsInfo =
+        await AssistantMethod.obtainOriginToDestinationDirectionDetails(
+            originLatLng, destinationLatLng);
+
+    Navigator.pop(context);
+
+    print("Drowing postion");
+    print(directionDetailsInfo!.e_point);
+
+    PolylinePoints pPoints = PolylinePoints();
+    List<PointLatLng> decodedPolylinePointsResultList = pPoints.decodePolyline(directionDetailsInfo.e_point!);
+
+    pLineCoOrdinatesList.clear();
+
+    if(decodedPolylinePointsResultList.isNotEmpty){
+      decodedPolylinePointsResultList.forEach((PointLatLng pointLatLng) {
+        pLineCoOrdinatesList.add(LatLng(pointLatLng.latitude, pointLatLng.longitude));
+      });
+    }
+
+    polylineSet.clear();
+
+    setState((){
+
+      Polyline polyline = Polyline(
+        color: Colors.pinkAccent,
+        polylineId: const PolylineId("PolylineID"),
+        jointType: JointType.round,
+        points: pLineCoOrdinatesList,
+        startCap: Cap.roundCap,
+        endCap: Cap.roundCap,
+        geodesic: true,
+      );
+
+      polylineSet.add(polyline);
+    });
+
+    LatLngBounds boundsLatLng;
+    if(originLatLng.latitude > destinationLatLng.latitude && originLatLng.longitude > destinationLatLng.longitude){
+
+      boundsLatLng = LatLngBounds(southwest: destinationLatLng, northeast: originLatLng);
+
+    }else if(originLatLng.longitude > destinationLatLng.longitude){
+
+      boundsLatLng = LatLngBounds(
+          southwest: LatLng(originLatLng.latitude,destinationLatLng.longitude),
+          northeast: LatLng(destinationLatLng.latitude,originLatLng.longitude),
+      );
+
+    }else if(originLatLng.latitude > destinationLatLng.latitude){
+
+      boundsLatLng = LatLngBounds(
+          southwest: LatLng(destinationLatLng.latitude,originLatLng.longitude),
+          northeast: LatLng(originLatLng.latitude,destinationLatLng.longitude),
+      );
+
+    }else{
+
+      boundsLatLng = LatLngBounds(southwest: originLatLng, northeast: destinationLatLng);
+
+    }
+
+    newGoogleMapController!.animateCamera(CameraUpdate.newLatLngBounds(boundsLatLng, 65));
+
+    Marker originMarker = Marker(
+      markerId: const MarkerId("originID"),
+      infoWindow: InfoWindow(title: destinationPostion.locationName,snippet: "Origin"),
+      position: originLatLng,
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueYellow),
+    );
+
+    Marker destinationMarker = Marker(
+      markerId: const MarkerId("destinationID"),
+      infoWindow: InfoWindow(title: destinationPostion.locationName,snippet: "Destination"),
+      position: destinationLatLng,
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+    );
+
+    setState((){
+      markersSet.add(originMarker);
+      markersSet.add(destinationMarker);
+    });
+
+    Circle originCircle = Circle(
+      circleId: CircleId("originID"),
+      fillColor: Colors.green,
+      radius: 12,
+      strokeWidth: 3,
+      strokeColor: Colors.white,
+      center: originLatLng,
+    );
+    Circle destinationCircle = Circle(
+      circleId: CircleId("destinationID"),
+      fillColor: Colors.red,
+      radius: 12,
+      strokeWidth: 3,
+      strokeColor: Colors.white,
+      center: destinationLatLng,
+    );
+
+    setState((){
+      circleSet.add(originCircle);
+      circleSet.add(destinationCircle);
+    });
   }
 }

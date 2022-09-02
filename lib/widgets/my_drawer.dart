@@ -1,10 +1,10 @@
+import 'package:drive_user_flutter/global/global.dart';
+import 'package:drive_user_flutter/splashScreen/splash_screen.dart';
 import 'package:flutter/material.dart';
 
 class MyDrawer extends StatefulWidget {
-
   String? name;
   String? email;
-
 
   MyDrawer({this.name, this.email});
 
@@ -18,6 +18,7 @@ class _MyDrawerState extends State<MyDrawer> {
     return Drawer(
       child: ListView(
         children: [
+          // header
           Container(
             height: 165,
             color: Colors.grey,
@@ -27,7 +28,7 @@ class _MyDrawerState extends State<MyDrawer> {
                 children: [
                   const Icon(
                     Icons.person,
-                    size: 40,
+                    size: 80,
                     color: Colors.grey,
                   ),
                   const SizedBox(
@@ -43,18 +44,83 @@ class _MyDrawerState extends State<MyDrawer> {
                             color: Colors.grey,
                             fontWeight: FontWeight.bold),
                       ),
+                      const SizedBox(
+                        height: 10,
+                      ),
                       Text(
                         widget.email.toString(),
                         style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,),
+                          fontSize: 10,
+                          color: Colors.grey,
+                        ),
                       ),
                     ],
                   )
                 ],
               ),
             ),
-          )
+          ),
+
+          const SizedBox(
+            height: 12,
+          ),
+
+          // body
+          GestureDetector(
+            onTap: () {},
+            child: const ListTile(
+              leading: Icon(
+                Icons.history,
+                color: Colors.white54,
+              ),
+              title: Text(
+                "History",
+                style: TextStyle(color: Colors.white54),
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: () {},
+            child: const ListTile(
+              leading: Icon(
+                Icons.person,
+                color: Colors.white54,
+              ),
+              title: Text(
+                "Visit Profile",
+                style: TextStyle(color: Colors.white54),
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: () {},
+            child: const ListTile(
+              leading: Icon(
+                Icons.info,
+                color: Colors.white54,
+              ),
+              title: Text(
+                "About",
+                style: TextStyle(color: Colors.white54),
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: () {
+              fAuth.signOut();
+              Navigator.push(context, MaterialPageRoute(builder: (c)=> const MySplashScreen()));
+            },
+            child: const ListTile(
+              leading: Icon(
+                Icons.logout,
+                color: Colors.white54,
+              ),
+              title: Text(
+                "SignOut",
+                style: TextStyle(color: Colors.white54),
+              ),
+            ),
+          ),
         ],
       ),
     );

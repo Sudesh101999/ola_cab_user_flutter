@@ -1,5 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.drive_user_flutter">
+
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
    <application
         android:label="drive_user_flutter"
         android:name="${applicationName}"
@@ -31,6 +35,6 @@
             android:name="flutterEmbedding"
             android:value="2" />
        <meta-data android:name="com.google.android.geo.API_KEY"
-           android:value="AIzaSyCmPXIk9GmGur5bjpK2_f3pPp-oaU0IMI4"/>
+           android:value="AIzaSyDtpmRohtGzFAAPXgMgv0Z5mGi9wgB1l-w"/>
     </application>
 </manifest>
